@@ -53,3 +53,21 @@ COOKIES_ENABLED=False
 ```
 有些网站是根据cookie识别出身份的， 如果我们禁用cookie，就无法识别我们的身份了。 
 
+### 调整下载延迟 citycode_adjust_download_delay
+我们默认启动爬虫，下载延迟DOWNLOAD_DELAY=0,是没有延迟的，这样会给抓取的网址造成巨大压力。 有些网址在防火墙级别或者web服务器级别可能会有限制。 
+所以我们如果对我们的抓取速度要求不高的话。 尽量跳高下载延迟值的设定
+```python
+DOWNLOAD_DELAY=2
+```
+其实不仅仅使用DOWNLOAD_DELAY,我们还是可以调整这个参数相关的其他参数，比如如下几个参数
+```python
+AUTOTHROTTLE_ENABLED :是否启动自适应下载延迟，默认是False
+AUTOTHROTTLE_START_DELAY:自适应下载延迟调整的起始值，默认是5，单位为s
+AUTOTHROTTLE_MAX_DELAY：自适应下载延迟调整的最大值，默认是60，单位s
+AUTOTHROTTLE_TARGET_CONCURRENCY:自适应算法计算的最佳值。
+AUTOTHROTTLE_DEBUG：是否启用自适应debug功能
+CONCURRENT_REQUESTS_PER_DOMAIN：每个域的并发请求数量，默认是不限制的
+CONCURRENT_REQUESTS_PER_IP：每个ip的并发请求数量，默认是不限制的。
+DOWNLOAD_DELAY：下载延迟，
+```
+这几个参数的设置。我这里不详细说了。 具体的传送门如下： [https://doc.scrapy.org/en/latest/topics/autothrottle.html](https://doc.scrapy.org/en/latest/topics/autothrottle.html)
