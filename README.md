@@ -1,0 +1,2 @@
+# Scrapy_Skills
+使用Scrapy抓取页面的一些被ban的技巧使用
