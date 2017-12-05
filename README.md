@@ -44,3 +44,12 @@ LOG_FILE=datetime.now().strftime("%Y%m%d%H%M%S") + '_scrapy.log'
         self.logger.info("*" * 40 + "request.headers" + "*" * 40)
         self.logger.info(str(response.request.headers))
 ```
+
+### 禁用cookie的使用案例 quotesbot-cookie_disabled
+
+这个没啥说的。 就是在settings中修改
+```python
+COOKIES_ENABLED=False
+```
+有些网站是根据cookie识别出身份的， 如果我们禁用cookie，就无法识别我们的身份了。 
+
