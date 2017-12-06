@@ -15,6 +15,7 @@
 
 
 ### useragent的使用案例 quotesbot-use_user_agent
+
 这个项目是使用了一个CustomUserAgentMiddleware自定义的中间件，给每个请求头添加User-Agent信息。 核心代码如下：
 ```python
 from .agents import AGENTS,AGENTS_ALL
@@ -54,8 +55,9 @@ COOKIES_ENABLED=False
 有些网站是根据cookie识别出身份的， 如果我们禁用cookie，就无法识别我们的身份了。 
 
 ### 调整下载延迟 citycode_adjust_download_delay
+
 我们默认启动爬虫，下载延迟DOWNLOAD_DELAY=0,是没有延迟的，这样会给抓取的网址造成巨大压力。 有些网址在防火墙级别或者web服务器级别可能会有限制。 
-所以我们如果对我们的抓取速度要求不高的话。 尽量跳高下载延迟值的设定
+所以我们如果对我们的抓取速度要求不高的话。 尽量调高下载延迟值的设定
 ```python
 DOWNLOAD_DELAY=2
 ```
