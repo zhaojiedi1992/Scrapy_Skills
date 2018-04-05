@@ -9,7 +9,7 @@
 1.  设置一个list集合存放userAgent,每次请求从集合里面选一个userAgent
 2.  禁用cookies,有些网址启用cookies来识别bot.
 3.  使用下载延迟download_delay，有些网址对单位时间内请求次数有限制，过多请求会被禁的。
-4.  如果肯能的话使用谷歌缓存，而不是直接请求网址。
+4.  如果可能的话使用谷歌缓存，而不是直接请求网址。
 5.  使用ip池，比如ProxyMesh，scrapoxy
 6.  使用高度分布的下载器，比如Crawlera
 
@@ -73,3 +73,12 @@ CONCURRENT_REQUESTS_PER_IP：每个ip的并发请求数量，默认是不限制�
 DOWNLOAD_DELAY：下载延迟，
 ```
 这几个参数的设置。我这里不详细说了。 具体的传送门如下： [https://doc.scrapy.org/en/latest/topics/autothrottle.html](https://doc.scrapy.org/en/latest/topics/autothrottle.html)
+
+### googlecache
+这个我暂时没法尝试， 百度没有cache这个好像。 等以后在做这个案例
+
+### 使用ip池 
+proxymesssh github地址： https://github.com/mizhgun/scrapy-proxymesh
+```cmd
+pip install scrapy-proxymesh -i https://pypi.tuna.tsinghua.edu.cn/simple
+```

@@ -1,0 +1,112 @@
+
+import logging 
+from urllib.request import urlopen
+import json
+import time
+from twisted.python.failure import Failure
+from twisted.internet.error import ConnectionRefusedError,ConnectionDone
+import threading , time
+logger=logging.getLogger(__name__)
+
+class CustomHttpProxyMiddleware(object):
+    current_proxy_url_used_count=0
+    current_proxy_url=None
+    pre_proxy_url=None
+    lock = threading.Lock()
+    def __init__(self):
+        logger.info(u"进入初始化工作")
+        if self.__class__.current_proxy_url is None:
+            if self.__class__.lock.acquire():
+                if self.__class__.current_proxy_url is None:
+                    self.__class__.get_proxy_url()
+                self.__class__.lock.release()
+        #self.__class__.get_proxy_url()
+
+    @classmethod
+    def get_proxy_info_one(cls):
+        #收费
+        url ="http://webapi.http.zhimacangku.com/getip?num=1&type=2&pro=0&city=0&yys=0&port=1&time=1&ts=1&ys=1&cs=1&lb=1&sb=0&pb=4&mr=1&regions=140000,210000"
+        #免费
+        #url = "http://webapi.http.zhimacangku.com/getip?num=1&type=2&pro=0&city=0&yys=0&port=11&pack=9608&ts=1&ys=0&cs=1&lb=1&sb=0&pb=4&mr=1&regions="
+        result=None
+        try:
+            json_str=urlopen(url).read()
+            result=json.loads(json_str)
+            logging.info(json_str)
+        except Exception as e :
+            logging.critical("Exception %s" % e)
+        return result
+
+    @classmethod    
+    def get_proxy_info(cls):
+        max_count=4
+        cur_count=0
+        while True:
+            result = cls.get_proxy_info_one()
+            cur_count+=1
+            if result["code"] ==0  or cur_count==max_count :
+                return result
+            time.sleep(6)
+            logger.info("sleeping finish")
+
+    @classmethod
+    def get_proxy_url(cls):
+        url=None
+        try:
+            proxy_info=cls.get_proxy_info()
+            url="http://" + proxy_info["data"][0]["ip"]+":" + str(proxy_info["data"][0]["port"])
+        except Exception as identifier:
+            pass
+        cls.pre_proxy_url=cls.current_proxy_url
+        cls.current_proxy_url_used_count=0
+        cls.current_proxy_url=url
+        logger.info("得到ip" + url)
+
+    def process_request(self, request, spider):
+        logger.info("当前的ip"+str(self.__class__.current_proxy_url_used_count) +str(self.__class__.current_proxy_url))
+        # TODO implement complex proxy providing algorithm
+        if self.use_proxy(request):
+            proxy_url=self.__class__.current_proxy_url
+            logger.info("请求前的url" + proxy_url)
+            try:
+                request.meta['proxy'] = proxy_url
+                self.__class__.current_proxy_url_used_count+=1
+            except Exception as e:
+                logging.critical("Exception %s" % e)
+
+    def process_response(self ,request, response, spider):
+        logger.info("中间件" + str(response.status)+str(self.__class__.current_proxy_url) +","+ str(self.__class__.current_proxy_url_used_count))
+        if response.status == 403:
+            meta = request.meta
+            if self.__class__.current_proxy_url == meta["proxy"] :
+                logger.info("process_response" + "启动了getproxy_url方法")
+                meta["proxy"]=self.__class__.get_proxy_url()
+            elif self.__class__.pre_proxy_url == meta["proxy"] : 
+                meta["proxy"]=self.__class__.current_proxy_url
+            return request.replace(meta=meta,dont_filter=True)
+        else:
+             return response
+       
+    def process_exception(self,request, exception, spider):
+        logger.info("抓取到中间件异常"+str(exception)+","+ str(type(exception)))
+        if isinstance(exception,(ConnectionRefusedError,ConnectionDone,ConnectionLost)):  
+            logger.info("处理异常"+repr(exception))
+            meta = request.meta
+            if self.__class__.current_proxy_url == meta["proxy"] :
+                logger.info("process_exception" + "启动了getproxy_url方法")
+                meta["proxy"]=self.__class__.get_proxy_url()
+            elif self.__class__.pre_proxy_url == meta["proxy"] : 
+                meta["proxy"]=self.__class__.current_proxy_url
+            return request.replace(meta=meta,dont_filter=True)
+        
+        
+    def use_proxy(self, request):
+        """
+        using direct download for depth <= 2
+        using proxy with probability 0.3
+        """
+        #if "depth" in request.meta and int(request.meta['depth']) <= 2:
+        #    return False
+        #i = random.randint(1, 10)
+        #return i <= 2
+        return True

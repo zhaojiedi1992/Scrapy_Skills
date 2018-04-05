@@ -1,0 +1,89 @@
+import scrapy
+from ..items import MoviePFItem
+from scrapy import Request
+
+class MovieSpider(scrapy.Spider):
+    name='moviepf'
+
+    #cookie1='bid=BHoR6ID6iZ4; ll="108296"; __yadk_uid=jfvQxP5RvsyQLe5UbsQgTPTsoIsTfYzT; gr_user_id=ca89b08f-d5fe-4901-a034-5476e752176e; viewed="1105583_5257905_21622482"; ct=y; _vwo_uuid_v2=2F6F1F4C58BA2B74297D802A908F03EC|67b71ce0767385c0adbad71482bdbb9d; ps=y; _ga=GA1.2.951420023.1512358879; ap=1; __utmv=30149280.16990; push_noty_num=0; push_doumail_num=0; _pk_ref.100001.8cb4=%5B%22%22%2C%22%22%2C1513168819%2C%22https%3A%2F%2Fwww.baidu.com%2Flink%3Furl%3D9KwMRPWnkaouEC7FhIDy7Un8eXIusDZF_WDBxRRaQya%26wd%3D%26eqid%3Dfc31513100008f05000000045a311fb0%22%5D; _pk_ses.100001.8cb4=*; __utma=30149280.951420023.1512358879.1513038826.1513168821.25; __utmc=30149280; __utmz=30149280.1513168821.25.8.utmcsr=baidu|utmccn=(organic)|utmcmd=organic; __utmt_douban=1; __utmt=1; _pk_id.100001.8cb4=a18c7dd9cf3e08f4.1490779400.27.1513170087.1513007842.; __utmb=30149280.39.10.1513168821; _gid=GA1.2.989486334.1513170098; _gat_UA-7019765-1=1; dbcl2="169902938:OjvjZiYyOYA"'
+
+    headers = {
+        #'cookie':cookie1,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36'
+    }
+    #print('22222222222')
+
+    def start_requests(self):
+        urlList2=[]
+        for i in range(0,162):#从520开始
+            url='https://movie.douban.com/tag/2016?start='+str(20*i)+'&type=T'
+            urlList2.append(url)
+        #print('5555555')
+        for url in urlList2:
+            yield Request(url, headers=self.headers)
+
+
+    def parse(self,response):
+        urlList=[]
+        #print('333333')
+        items = []
+        for sel in response.xpath('//div[@class="pl2"]'):
+
+            url=sel.xpath('a[@href]/@href')[0].extract()
+            urlList.append(url)
+        #print(urlList)
+        for url in urlList:
+            #murl=url+'reviews'
+
+            movieid=url.split('/')[-2]
+
+            yield Request(url,headers=self.headers,callback=self.parsemovie,meta={'movieid':movieid})
+
+    def  parsemovie(self,response):
+        
+        self.logger.info(response.status)
+        #print(8888)
+        item = MoviePFItem()
+        item['dy']=response.xpath('//a[@rel="v:directedBy"]/text()').extract_first()
+        bj=response.xpath('//span[@class="attrs"]')
+        try:
+            bj=bj[1].xpath('a/text()').extract()
+            item['bj']=" ".join(bj)
+        except Exception as identifier:
+            pass
+        
+
+       
+
+        zy = response.xpath('//a[@rel="v:starring"]/text()').extract()
+
+        item['zy'] = " ".join(zy)
+
+        item['m_id']=response.meta['movieid']
+        #item = response.meta['item']
+        item['lx'] = response.xpath('//span[@property="v:genre"]/text()').extract_first()
+        dqlst = response.xpath('//div[@id="info"]/text()').extract()
+        item['dq'] = " ".join(dqlst).strip()
+        item['dbpf'] = response.xpath('//strong[@property="v:average"]/text()').extract_first()
+        item['phlink'] = response.xpath('//img[@rel="v:image"]/@src').extract_first()
+        tlst = response.xpath('//span[@property="v:initialReleaseDate"]/@content').extract()
+        item['sytime'] = " ".join(tlst)
+        item['pianchang'] = response.xpath('//span[@property="v:runtime"]/@content').extract_first()
+        item['summary'] = response.xpath('//span[@property="v:summary"]/text()').extract_first()
+
+        item['proxy']= response.meta["proxy"]
+        #print(item)
+        #print('999999999')
+        yield item
+
+        def errback_httpbin(self, failure):
+            # log all failures
+            self.logger.error(repr(failure))
+            self.logger.error(type(failure))
+
+
+
+
+
+
+
